@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
   Image,
@@ -13,14 +12,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// Import Komponen Modular Layar Terpisah
+import BottomTabBar, { TabType } from "../components/BottomTabBar";
+import HistoryScreen from "../components/HistoryScreen";
+import HomeScreen from "../components/HomeScreen";
+import SettingsScreen from "../components/SettingsScreen";
+import UserDetailScreen from "../components/UserDetailScreen";
+
 const { width } = Dimensions.get("window");
 
-type Step = "intro" | "onboarding-1" | "onboarding-2" | "onboarding-3";
+type AppFlow = "intro" | "onboarding-1" | "onboarding-2" | "onboarding-3" | "main";
+type MainView = TabType | "user-detail";
 
 export default function Index() {
-  const [currentStep, setCurrentStep] = useState<Step>("intro");
+  const [appFlow, setAppFlow] = useState<AppFlow>("intro");
+  const [currentView, setCurrentView] = useState<MainView>("home");
+
   const progressAnim = useRef(new Animated.Value(0)).current;
 
+  // Memuat Font Google Montserrat Alternates jika dibuka di browser
   useEffect(() => {
     if (Platform.OS === "web" && typeof document !== "undefined") {
       const fontId = "montserrat-alternates-font";
@@ -35,8 +45,9 @@ export default function Index() {
     }
   }, []);
 
+  // Animasi progress bar pada Intro Screen (2.5 detik)
   useEffect(() => {
-    if (currentStep === "intro") {
+    if (appFlow === "intro") {
       progressAnim.setValue(0);
       Animated.timing(progressAnim, {
         toValue: 1,
@@ -44,189 +55,177 @@ export default function Index() {
         useNativeDriver: false,
       }).start(({ finished }) => {
         if (finished) {
-          setCurrentStep("onboarding-1");
+          setAppFlow("onboarding-1");
         }
       });
     }
-  }, [currentStep, progressAnim]);
+  }, [appFlow, progressAnim]);
 
-  const handleGetStarted = () => {
-    if (Platform.OS === "web") {
-      alert("Selamat Datang di Secura! Anda telah menyelesaikan panduan awal.");
-    } else {
-      Alert.alert(
-        "Selamat Datang di Secura",
-        "Anda telah menyelesaikan panduan awal proteksi anti-fraud.",
-        [{ text: "Mulai", onPress: () => {} }]
-      );
-    }
-  };
-
-  // Lebar animasi bar loading
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 180],
   });
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+  // =========================================================================
+  // 1. ALUR INTRO & ONBOARDING
+  // =========================================================================
+  if (appFlow !== "main") {
+    return (
+      <SafeAreaView style={styles.introOnboardingContainer}>
+        <StatusBar style="light" />
 
-      {/* LAYAR 1: INTRO SCREEN */}
-      {currentStep === "intro" && (
-        <View style={styles.introContainer}>
-          <View style={styles.topSpacer} />
-
-          <View style={styles.introCenterSection}>
-            <Image
-              source={require("../../assets/images/intro-logo.png")}
-              style={styles.introLogo}
-              resizeMode="contain"
-            />
-
-            <Text style={styles.introSlogan}>Recognize, Check, Protect.</Text>
-
-            {/* Progress Bar Kapsul */}
-            <View style={styles.progressBarTrack}>
-              <Animated.View
-                style={[
-                  styles.progressBarFill,
-                  {
-                    width: progressWidth,
-                  },
-                ]}
+        {/* INTRO SCREEN */}
+        {appFlow === "intro" && (
+          <View style={styles.introContainer}>
+            <View style={styles.topSpacer} />
+            <View style={styles.introCenterSection}>
+              <Image
+                source={require("../../assets/images/intro-logo.png")}
+                style={styles.introLogo}
+                resizeMode="contain"
               />
+              <Text style={styles.introSlogan}>Recognize, Check, Protect.</Text>
+              <View style={styles.progressBarTrack}>
+                <Animated.View
+                  style={[styles.progressBarFill, { width: progressWidth }]}
+                />
+              </View>
+            </View>
+            <View style={styles.introBottomSection}>
+              <Text style={styles.introBrandName}>SECURA</Text>
             </View>
           </View>
+        )}
 
-          {/* Tulisan SECURA di Bawah dengan Font Montserrat Alternates */}
-          <View style={styles.introBottomSection}>
-            <Text style={styles.introBrandName}>SECURA</Text>
+        {/* ONBOARDING 1 */}
+        {appFlow === "onboarding-1" && (
+          <View style={styles.onboardingContainer}>
+            <View style={styles.indicatorRow}>
+              <View style={[styles.indicatorBar, styles.indicatorActive]} />
+              <View style={[styles.indicatorBar, styles.indicatorInactive]} />
+              <View style={[styles.indicatorBar, styles.indicatorInactive]} />
+            </View>
+            <View style={styles.headingContainer}>
+              <Text style={styles.headingText}>Think Before{"\n"}You Click.</Text>
+            </View>
+            <View style={styles.illustrationContainer}>
+              <Image
+                source={require("../../assets/images/onboarding-1.png")}
+                style={styles.illustrationImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                activeOpacity={0.85}
+                onPress={() => setAppFlow("onboarding-2")}
+              >
+                <Text style={styles.primaryButtonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
+
+        {/* ONBOARDING 2 */}
+        {appFlow === "onboarding-2" && (
+          <View style={styles.onboardingContainer}>
+            <View style={styles.indicatorRow}>
+              <View style={[styles.indicatorBar, styles.indicatorInactive]} />
+              <View style={[styles.indicatorBar, styles.indicatorActive]} />
+              <View style={[styles.indicatorBar, styles.indicatorInactive]} />
+            </View>
+            <View style={styles.headingContainer}>
+              <Text style={styles.headingText}>Check Every{"\n"}Link.</Text>
+            </View>
+            <View style={styles.illustrationContainer}>
+              <Image
+                source={require("../../assets/images/onboarding-2.png")}
+                style={styles.illustrationImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                activeOpacity={0.85}
+                onPress={() => setAppFlow("onboarding-3")}
+              >
+                <Text style={styles.primaryButtonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* ONBOARDING 3 */}
+        {appFlow === "onboarding-3" && (
+          <View style={styles.onboardingContainer}>
+            <View style={styles.indicatorRow}>
+              <View style={[styles.indicatorBar, styles.indicatorInactive]} />
+              <View style={[styles.indicatorBar, styles.indicatorInactive]} />
+              <View style={[styles.indicatorBar, styles.indicatorActive]} />
+            </View>
+            <View style={styles.headingContainer}>
+              <Text style={styles.headingText}>Stay Safe{"\n"}Online.</Text>
+            </View>
+            <View style={styles.illustrationContainer}>
+              <Image
+                source={require("../../assets/images/onboarding-3.png")}
+                style={styles.illustrationImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setAppFlow("main");
+                  setCurrentView("home");
+                }}
+              >
+                <Text style={styles.primaryButtonText}>Get Started</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  // =========================================================================
+  // 2. HALAMAN UTAMA (MODULAR SCREENS DENGAN BOTTOM TAB BAR)
+  // =========================================================================
+  return (
+    <SafeAreaView style={styles.mainContainer}>
+      <StatusBar style="dark" />
+
+      {/* Render Komponen Sesuai Tab Aktif */}
+      {currentView === "home" && <HomeScreen />}
+      {currentView === "history" && <HistoryScreen />}
+      {currentView === "settings" && (
+        <SettingsScreen onNavigateToUserDetail={() => setCurrentView("user-detail")} />
+      )}
+      {currentView === "user-detail" && (
+        <UserDetailScreen onBack={() => setCurrentView("settings")} />
       )}
 
-      {/* LAYAR 2: ONBOARDING SCREEN 1 */}
-      {currentStep === "onboarding-1" && (
-        <View style={styles.onboardingContainer}>
-          {/* 3 Strip Indikator di Atas */}
-          <View style={styles.indicatorRow}>
-            <View style={[styles.indicatorBar, styles.indicatorActive]} />
-            <View style={[styles.indicatorBar, styles.indicatorInactive]} />
-            <View style={[styles.indicatorBar, styles.indicatorInactive]} />
-          </View>
-
-          {/* Judul */}
-          <View style={styles.headingContainer}>
-            <Text style={styles.headingText}>Think Before{"\n"}You Click.</Text>
-          </View>
-
-          {/* Ilustrasi */}
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={require("../../assets/images/onboarding-1.png")}
-              style={styles.illustrationImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Tombol Next */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.85}
-              onPress={() => setCurrentStep("onboarding-2")}
-            >
-              <Text style={styles.primaryButtonText}>Next</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* LAYAR 3: ONBOARDING SCREEN 2 */}
-      {currentStep === "onboarding-2" && (
-        <View style={styles.onboardingContainer}>
-          {/* 3 Strip Indikator di Atas */}
-          <View style={styles.indicatorRow}>
-            <View style={[styles.indicatorBar, styles.indicatorInactive]} />
-            <View style={[styles.indicatorBar, styles.indicatorActive]} />
-            <View style={[styles.indicatorBar, styles.indicatorInactive]} />
-          </View>
-
-          {/* Judul */}
-          <View style={styles.headingContainer}>
-            <Text style={styles.headingText}>Check Every{"\n"}Link.</Text>
-          </View>
-
-          {/* Ilustrasi */}
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={require("../../assets/images/onboarding-2.png")}
-              style={styles.illustrationImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Tombol Next */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.85}
-              onPress={() => setCurrentStep("onboarding-3")}
-            >
-              <Text style={styles.primaryButtonText}>Next</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* LAYAR 4: ONBOARDING SCREEN 3 */}
-      {currentStep === "onboarding-3" && (
-        <View style={styles.onboardingContainer}>
-          {/* 3 Strip Indikator di Atas */}
-          <View style={styles.indicatorRow}>
-            <View style={[styles.indicatorBar, styles.indicatorInactive]} />
-            <View style={[styles.indicatorBar, styles.indicatorInactive]} />
-            <View style={[styles.indicatorBar, styles.indicatorActive]} />
-          </View>
-
-          {/* Judul */}
-          <View style={styles.headingContainer}>
-            <Text style={styles.headingText}>Stay Safe{"\n"}Online.</Text>
-          </View>
-
-          {/* Ilustrasi */}
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={require("../../assets/images/onboarding-3.png")}
-              style={styles.illustrationImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Tombol Get Started */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.85}
-              onPress={handleGetStarted}
-            >
-              <Text style={styles.primaryButtonText}>Get Started</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      {/* Floating Bottom Tab Bar */}
+      <BottomTabBar
+        activeTab={
+          currentView === "user-detail" ? "settings" : (currentView as TabType)
+        }
+        onTabChange={(tab) => setCurrentView(tab)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  introOnboardingContainer: {
     flex: 1,
     backgroundColor: "#77ABFD",
   },
-
-  // ===== Gaya Layar Intro =====
   introContainer: {
     flex: 1,
     justifyContent: "space-between",
@@ -243,8 +242,8 @@ const styles = StyleSheet.create({
     marginTop: -10,
   },
   introLogo: {
-    width: 350, 
-    height: 350,
+    width: 230,
+    height: 230,
     marginBottom: 24,
   },
   introSlogan: {
@@ -283,8 +282,6 @@ const styles = StyleSheet.create({
       default: undefined,
     }),
   },
-
-  // ===== Gaya Layar Onboarding =====
   onboardingContainer: {
     flex: 1,
     justifyContent: "space-between",
@@ -351,5 +348,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.2,
+  },
+  mainContainer: {
+    flex: 1,
+    backgroundColor: "#EDF2FB",
   },
 });
