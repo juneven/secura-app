@@ -1,21 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export type TabType = "home" | "history" | "settings";
-
-interface BottomTabBarProps {
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
-}
-
 export default function BottomTabBar({
   activeTab,
   onTabChange,
-}: BottomTabBarProps) {
+}) {
   return (
     <View style={styles.container}>
       <View style={styles.bar}>
-        {/* Tab 1: Home */}
         <TouchableOpacity
           style={styles.tabButton}
           activeOpacity={0.8}
@@ -37,7 +29,6 @@ export default function BottomTabBar({
           </Text>
         </TouchableOpacity>
 
-        {/* Tab 2: History */}
         <TouchableOpacity
           style={styles.tabButton}
           activeOpacity={0.8}
@@ -59,7 +50,6 @@ export default function BottomTabBar({
           </Text>
         </TouchableOpacity>
 
-        {/* Tab 3: Settings */}
         <TouchableOpacity
           style={styles.tabButton}
           activeOpacity={0.8}

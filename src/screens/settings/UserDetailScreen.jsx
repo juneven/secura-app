@@ -9,11 +9,7 @@ import {
     View,
 } from "react-native";
 
-interface UserDetailScreenProps {
-  onBack: () => void;
-}
-
-export default function UserDetailScreen({ onBack }: UserDetailScreenProps) {
+export default function UserDetailScreen({ onBack }) {
   const handleEditProfile = () => {
     const msg = "Fitur edit profil akan segera hadir.";
     Platform.OS === "web" ? alert(msg) : Alert.alert("Info", msg);
